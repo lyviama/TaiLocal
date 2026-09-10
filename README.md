@@ -2,6 +2,8 @@
 
 > **Taiwan + Localization** — 简体中文 → 台湾繁體中文 的专业批量转换工具
 
+**English keywords:** Taiwan localization · Simplified to Traditional Chinese converter · zh-CN to zh-TW · OpenCC alternative · Taiwanese Mandarin terminology · Excel batch translation · GUI desktop tool · 免安裝 · 台灣用語轉換 · 繁體中文本地化
+
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -113,6 +115,16 @@ python build_terms.py
 - **輸出衝突提示**：若輸出檔案正被打開，同樣給出明確指引
 
 > Built for translators, not programmers — every failure mode tells you exactly what to do next.
+
+## 🆚 為什麼不用 OpenCC 就好？ / Why not just use OpenCC?
+
+OpenCC 是優秀的字符級轉換工具，但**字符轉換 ≠ 在地化**。「内存」「软件」「视频」這類詞，OpenCC 只能給出「內存」「軟體」「視頻」（港式）或直轉結果。TaiLocal 在 OpenCC 之上疊加了：
+
+1. **千條級台灣用語術語庫**（科技/NAS/消費電子優化）——「視頻」→「影片」、「網絡」→「網路」
+2. **英文語義鎖定**——同一個「卸载」，unmount→卸載、uninstall→解除安裝、remove→移除
+3. **post_fix 人工校對層**——兜住 OpenCC 的已知誤翻
+
+簡單說：OpenCC 管「字對不對」，TaiLocal 管「台灣人讀起來對不對」。
 
 ## 📄 License
 
