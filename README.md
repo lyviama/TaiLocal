@@ -105,6 +105,15 @@ python build_terms.py
      → 輸出 *_tw_*.xlsx + 審計 log
 ```
 
+
+## 🛡️ 防呆设计 / Safety Guards
+
+- **檔案佔用檢測**：翻譯前自動檢查檔案是否正被 Excel/WPS 鎖定——若被鎖定，軟體不會崩潰，而是友善提示「請先關閉該表格後重試」
+- **輸出權限檢測**：自動確認輸出資料夾可寫，避免翻譯完成後才發現存不了
+- **輸出衝突提示**：若輸出檔案正被打開，同樣給出明確指引
+
+> Built for translators, not programmers — every failure mode tells you exactly what to do next.
+
 ## 📄 License
 
 MIT · 歡迎 Star / Fork / PR
