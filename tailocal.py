@@ -20,10 +20,44 @@ POST_FIX = os.path.join(BASE, "post_fix.csv")
 APP_NAME = "TaiLocal 最台繁"
 
 
+def check_file_locked(path):
+    """防呆检测：文件被 Excel/WPS 占用时返回提示字符串，否则 None"""
+    import os
+    if not os.path.exists(path):
+        return f"找不到檔案：{path}"
+    if not os.access(path, os.R_OK):
+        return f"沒有讀取權限：{path}"
+    # 试写同一目录的临时文件，探测输出目录是否可写
+    out_dir = os.path.dirname(os.path.abspath(path))
+    probe = os.path.join(out_dir, f".tailocal_probe_{os.getpid()}.tmp")
+    try:
+        with open(probe, "w"):
+            pass
+        os.remove(probe)
+    except PermissionError:
+        return f"輸出資料夾沒有寫入權限：{out_dir}"
+    except OSError:
+        return f"輸出資料夾無法寫入：{out_dir}"
+    # Windows: 以追加模式打开目标文件，被Excel锁定会抛 PermissionError
+    if os.name == "nt":
+        try:
+            with open(path, "a", encoding="utf-8"):
+                pass
+        except PermissionError:
+            return f"⚠️ 發現 {os.path.basename(path)} 正在使用中，請先關閉 Excel 中打開的該表格後重試！"
+        except OSError:
+            pass
+    return None
+
+
 def run_convert(input_file, status_cb):
     """执行转换，返回输出文件路径"""
     import pandas as pd
     from tailocal_core import convert_excel
+
+    locked = check_file_locked(input_file)
+    if locked:
+        raise PermissionError(locked)
 
     log_rows = []
     df, loaded, n_terms, n_fix = convert_excel(input_file, TERMS, POST_FIX, log_rows)
@@ -32,7 +66,10 @@ def run_convert(input_file, status_cb):
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     ts = datetime.now().strftime("%m%d_%H%M%S")
     out_file = os.path.join(out_dir, f"{base_name}_tw_{ts}.xlsx")
-    df.to_excel(out_file, index=False)
+    try:
+        df.to_excel(out_file, index=False)
+    except PermissionError:
+        raise PermissionError(f"⚠️ 輸出檔案 {os.path.basename(out_file)} 無法寫入——若它正在 Excel 中打開，請先關閉後重試！")
 
     # log（debug用）
     try:
@@ -49,7 +86,11 @@ def run_cli(argv):
     if not argv or not argv[0].endswith(".xlsx") or not os.path.exists(argv[0]):
         print(f"用法: python {os.path.basename(__file__)} <文件.xlsx> [--debug]")
         sys.exit(1)
-    out, n, msg = run_convert(argv[0], print)
+    try:
+        out, n, msg = run_convert(argv[0], print)
+    except PermissionError as e:
+        print(f"⚠️ {e}")
+        sys.exit(2)
     print(msg)
     print(f"✅ 完成 {n} 条 → {out}")
 
@@ -107,6 +148,9 @@ def run_gui():
                 out, n, msg = run_convert(path, None)
                 root.after(0, lambda: status.configure(
                     text=f"✅ 翻譯完成！共 {n} 條\n{msg}\n已輸出至：{out}", fg="#2C6E49"))
+            except PermissionError as e:
+                msg = str(e) if str(e) else "檔案被佔用"
+                root.after(0, lambda: status.configure(text=f"⚠️ {msg}", fg="#B7950B"))
             except Exception as e:
                 root.after(0, lambda: status.configure(text=f"❌ 出錯：{e}", fg="#C0392B"))
             finally:
