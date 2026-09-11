@@ -29,6 +29,30 @@
 - **🔧 post_fix 二次修正**：OpenCC 轉完再過一遍人工校對規則（`滑鼠`、`帆船`、` connection埠` 這類坑全部兜住）
 - **📋 全程 Log**：每條輸出記錄原文/結果/命中術語/未命中術語，方便審計與補詞
 
+## ⚡ 三分鐘上手 / 3-Minute Start（最簡指南）
+
+**第 1 步：下載**
+
+- 🟢 **我不會裝 Python** → 到右側 [Releases](https://github.com/lyviama/TaiLocal/releases) 下載 `TaiLocal.exe`（Windows 免安裝，雙擊即用）
+- 🔵 **我會用 Python** → 點綠色 `Code` 按鈕 → `Download ZIP` → 解壓
+
+**第 2 步：準備一個 Excel**
+
+- 你的文案表（`.xlsx`），有中文那列就行，表頭叫什麼都隨意
+
+**第 3 步：轉換**
+
+```
+下載檔案 → 雙擊 TaiLocal.exe → 選擇你的 Excel → 完成
+                                              ↓
+                            原文件旁邊多出一個「xxx_tw.xlsx」
+                            裡面新增一列 _zh-TW 就是台灣繁體
+```
+
+**遇到轉錯的詞？** 軟體裡用「🔍 術語查詢」搜這個詞 → 照提示加進 `post_fix.csv` → 重新轉換。完畢。
+
+> 技術細節（命令行 / 自行打包 / 術語庫進階維護）往下看 ↓
+
 ## 🚀 快速開始 / Quick Start
 
 ### 方式一：直接運行（需 Python 3.8+）
