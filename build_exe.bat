@@ -18,7 +18,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo [2/2] Building TaiLocal.exe ... (1-3 minutes)
-python -m PyInstaller --onefile --noconsole --name TaiLocal --collect-all opencc tailocal.py
+python -m PyInstaller --onefile --noconsole --name TaiLocal --collect-all opencc --add-data "terms.csv;." --add-data "post_fix.csv;." tailocal.py
 if errorlevel 1 (
   echo [ERROR] Build failed. Screenshot this window.
   pause
@@ -26,4 +26,5 @@ if errorlevel 1 (
 )
 echo.
 echo DONE! Software is at:  dist\TaiLocal.exe
+echo Terms database is built in. No extra files needed.
 pause
