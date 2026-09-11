@@ -50,7 +50,7 @@ def check_file_locked(path):
     return None
 
 
-def run_convert(input_file, status_cb):
+def run_convert(input_file, status_cb=None, progress_cb=None):
     """执行转换，返回输出文件路径"""
     import pandas as pd
     from tailocal_core import convert_excel
@@ -60,7 +60,7 @@ def run_convert(input_file, status_cb):
         raise PermissionError(locked)
 
     log_rows = []
-    df, loaded, n_terms, n_fix = convert_excel(input_file, TERMS, POST_FIX, log_rows)
+    df, loaded, n_terms, n_fix = convert_excel(input_file, TERMS, POST_FIX, log_rows, progress_cb=progress_cb)
 
     out_dir = os.path.dirname(os.path.abspath(input_file))
     base_name = os.path.splitext(os.path.basename(input_file))[0]
@@ -99,6 +99,22 @@ def run_gui():
     import tkinter as tk
     from tkinter import filedialog, font as tkfont
 
+    import ctypes
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
+    if sys.platform == "win32":
+        _fam = "Microsoft JhengHei"
+    else:
+        _fam = "PingFang TC"
+    FONT = (_fam, 11)
+    FONT_S = (_fam, 10)
+    FONT_XS = (_fam, 9)
     root = tk.Tk()
     root.title(APP_NAME)
     root.geometry("460x460")
@@ -116,23 +132,23 @@ def run_gui():
 
     tk.Label(frame, text="最台繁", font=("PingFang TC", 26, "bold"),
              bg="#F7F3EE", fg="#2C6E49").pack(pady=(6, 0))
-    tk.Label(frame, text="TaiLocal · 簡體中文 → 台灣繁體中文", font=("PingFang TC", 11),
+    tk.Label(frame, text="TaiLocal · 簡體中文 → 台灣繁體中文", font=FONT,
              bg="#F7F3EE", fg="#8A8A8A").pack(pady=(0, 18))
 
     status = tk.Label(frame, text="選一個 Excel，剩下的交給我。",
-                      font=("PingFang TC", 11), bg="#F7F3EE", fg="#555555", wraplength=400, justify="left")
+                      font=FONT, bg="#F7F3EE", fg="#555555", wraplength=400, justify="left")
     status.pack(pady=(0, 14))
 
     # ── 術語查詢（搜索優化 + 自定義兜底入口）──
     tk.Label(frame, text="🔍 術語查詢：查一個詞會怎麼轉、要不要自己補規則",
-             font=("PingFang TC", 10), bg="#F7F3EE", fg="#2C6E49").pack(pady=(0, 4))
+             font=FONT_S, bg="#F7F3EE", fg="#2C6E49").pack(pady=(0, 4))
     search_row = tk.Frame(frame, bg="#F7F3EE")
     search_row.pack(pady=(0, 10))
     search_var = tk.StringVar()
     search_entry = tk.Entry(search_row, textvariable=search_var, width=22,
-                            font=("PingFang TC", 11), relief="solid", bd=1)
+                            font=FONT, relief="solid", bd=1)
     search_entry.pack(side="left", padx=(0, 6))
-    search_result = tk.Label(frame, text="", font=("PingFang TC", 10),
+    search_result = tk.Label(frame, text="", font=FONT_S,
                              bg="#F7F3EE", fg="#555555", wraplength=400, justify="left")
 
     def _terms_paths():
@@ -164,7 +180,7 @@ def run_gui():
             search_result.config(text=f"查詢出錯：{e}", fg="#B0533A")
         search_result.pack(pady=(0, 8))
 
-    search_btn = tk.Button(search_row, text="查詢", font=("PingFang TC", 11),
+    search_btn = tk.Button(search_row, text="查詢", font=FONT,
                            bg="#E8F0E8", fg="#2C6E49", bd=1, relief="solid",
                            command=do_search)
     search_btn.pack(side="left")
@@ -191,8 +207,14 @@ def run_gui():
         status.configure(text=f"正在翻譯：{os.path.basename(path)}\n請稍候…", fg="#2C6E49")
 
         def worker():
+            def _prog(stage, pct=None):
+                if stage == "read":
+                    root.after(0, lambda: status.configure(text="讀取 Excel 中…", fg="#2C6E49"))
+                elif stage == "convert":
+                    root.after(0, lambda: status.configure(
+                        text=f"正在翻譯：{os.path.basename(path)}\n進度 {pct}%", fg="#2C6E49"))
             try:
-                out, n, msg = run_convert(path, None)
+                out, n, msg = run_convert(path, None, progress_cb=_prog)
                 root.after(0, lambda: status.configure(
                     text=f"✅ 翻譯完成！共 {n} 條\n{msg}\n已輸出至：{out}", fg="#2C6E49"))
             except PermissionError as e:
@@ -207,7 +229,7 @@ def run_gui():
 
     btn.configure(command=pick)
     tk.Label(frame, text="輸出檔案會自動存在原檔案旁邊\n術語庫：terms.csv（可自行增刪詞條）",
-             font=("PingFang TC", 9), bg="#F7F3EE", fg="#AAAAAA", justify="center").pack(side="bottom", pady=(10, 0))
+             font=FONT_XS, bg="#F7F3EE", fg="#AAAAAA", justify="center").pack(side="bottom", pady=(10, 0))
 
     root.mainloop()
 
