@@ -14,8 +14,27 @@ from datetime import datetime
 
 BASE = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
 
-TERMS = [os.path.join(BASE, "terms.csv"), os.path.join(BASE, "terms_private.csv")]
-POST_FIX = os.path.join(BASE, "post_fix.csv")
+# 打包内置术语表（--add-data 打进 exe，解包目录 _MEIPASS）
+if getattr(sys, "frozen", False):
+    _bundled = sys._MEIPASS
+else:
+    _bundled = os.path.dirname(os.path.abspath(__file__))
+
+# exe 旁边的 terms.csv / post_fix.csv 优先（用户可自定义覆盖内置版）；没有则用内置
+_user_terms = os.path.join(BASE, "terms.csv")
+_bundled_terms = os.path.join(_bundled, "terms.csv")
+_terms_list = []
+if os.path.exists(_user_terms):
+    _terms_list.append(_user_terms)
+elif os.path.exists(_bundled_terms):
+    _terms_list.append(_bundled_terms)
+_user_priv = os.path.join(BASE, "terms_private.csv")
+if os.path.exists(_user_priv):
+    _terms_list.append(_user_priv)
+TERMS = _terms_list
+
+_user_pf = os.path.join(BASE, "post_fix.csv")
+POST_FIX = _user_pf if os.path.exists(_user_pf) else os.path.join(_bundled, "post_fix.csv")
 
 APP_NAME = "TaiLocal 最台繁"
 
@@ -101,7 +120,7 @@ def run_gui():
 
     import ctypes
     try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PER_MONITOR_AWARE
     except Exception:
         try:
             ctypes.windll.user32.SetProcessDPIAware()
