@@ -101,7 +101,7 @@ def run_gui():
 
     root = tk.Tk()
     root.title(APP_NAME)
-    root.geometry("460x360")
+    root.geometry("460x460")
     root.resizable(False, False)
     root.configure(bg="#F7F3EE")
 
@@ -122,6 +122,53 @@ def run_gui():
     status = tk.Label(frame, text="選一個 Excel，剩下的交給我。",
                       font=("PingFang TC", 11), bg="#F7F3EE", fg="#555555", wraplength=400, justify="left")
     status.pack(pady=(0, 14))
+
+    # ── 術語查詢（搜索優化 + 自定義兜底入口）──
+    tk.Label(frame, text="🔍 術語查詢：查一個詞會怎麼轉、要不要自己補規則",
+             font=("PingFang TC", 10), bg="#F7F3EE", fg="#2C6E49").pack(pady=(0, 4))
+    search_row = tk.Frame(frame, bg="#F7F3EE")
+    search_row.pack(pady=(0, 10))
+    search_var = tk.StringVar()
+    search_entry = tk.Entry(search_row, textvariable=search_var, width=22,
+                            font=("PingFang TC", 11), relief="solid", bd=1)
+    search_entry.pack(side="left", padx=(0, 6))
+    search_result = tk.Label(frame, text="", font=("PingFang TC", 10),
+                             bg="#F7F3EE", fg="#555555", wraplength=400, justify="left")
+
+    def _terms_paths():
+        paths = [os.path.join(BASE, "terms.csv")]
+        priv = os.path.join(BASE, "terms_private.csv")
+        if os.path.exists(priv):
+            paths.append(priv)
+        return paths
+
+    def do_search(event=None):
+        kw = search_var.get().strip()
+        if not kw:
+            return
+        try:
+            from tailocal_core import search_terms
+            r = search_terms(kw, _terms_paths(), os.path.join(BASE, "post_fix.csv"))
+            if not r:
+                return
+            lines = []
+            if r["in_terms"]:
+                lines.append(f"📚 術語表：{kw} → {r['terms_result']}")
+            if r["in_post_fix"]:
+                lines.append(f"🛠️ 二次修正：{kw} → {r['postfix_result']}")
+            if not r["in_terms"] and not r["in_post_fix"]:
+                lines.append(f"❓ 「{kw}」未被收錄，管線轉換結果：{r['converted']}")
+                lines.append("若結果不對：把它加進 post_fix.csv（格式：原詞,正確詞），下次轉換即生效。")
+            search_result.config(text="\n".join(lines), fg="#8A5A00" if (r["in_terms"] or r["in_post_fix"]) else "#B0533A")
+        except Exception as e:
+            search_result.config(text=f"查詢出錯：{e}", fg="#B0533A")
+        search_result.pack(pady=(0, 8))
+
+    search_btn = tk.Button(search_row, text="查詢", font=("PingFang TC", 11),
+                           bg="#E8F0E8", fg="#2C6E49", bd=1, relief="solid",
+                           command=do_search)
+    search_btn.pack(side="left")
+    search_entry.bind("<Return>", do_search)
 
     btn = tk.Button(frame, text="選擇待翻譯的 Excel 檔案", font=("PingFang TC", 13, "bold"),
                     bg="#2C6E49", fg="white", relief="flat", cursor="hand2",
