@@ -4,35 +4,26 @@ echo ============================================
 echo   TaiLocal one-click packaging
 echo ============================================
 echo.
-
 where python >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] Python not found.
-  echo Please install Python from https://www.python.org/downloads/
-  echo IMPORTANT: check "Add Python to PATH" during install.
-  echo.
+  echo [ERROR] Python not found. Install from python.org, check Add to PATH.
   pause
   exit /b 1
 )
-
 echo [1/2] Installing pyinstaller ...
 python -m pip install pyinstaller -q
 if errorlevel 1 (
-  echo [ERROR] pip install failed. Check internet and try again.
+  echo [ERROR] pip install failed.
   pause
   exit /b 1
 )
-
-echo [2/2] Building TaiLocal.exe ...
-python -m PyInstaller --onefile --noconsole --name TaiLocal tailocal.py
+echo [2/2] Building TaiLocal.exe ... (1-3 minutes)
+python -m PyInstaller --onefile --noconsole --name TaiLocal --collect-all opencc tailocal.py
 if errorlevel 1 (
-  echo [ERROR] Build failed. Screenshot this window and send it.
+  echo [ERROR] Build failed. Screenshot this window.
   pause
   exit /b 1
 )
-
 echo.
-echo ============================================
-echo   DONE! Software is at:  dist\TaiLocal.exe
-echo ============================================
+echo DONE! Software is at:  dist\TaiLocal.exe
 pause
