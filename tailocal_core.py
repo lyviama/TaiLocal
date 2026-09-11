@@ -186,3 +186,23 @@ def convert_excel(input_file, terms_paths, post_fix_path, log_rows=None):
 
     df["_zh-TW"] = df.apply(conv, axis=1)
     return df, loaded, len(mapping), len(post_fix)
+
+
+def search_terms(keyword, terms_paths, post_fix_path):
+    """术语搜索：查某词在术语库/post_fix里的收录与转换结果。
+    返回 dict: {in_terms, terms_result, in_post_fix, postfix_result, converted(实际管线转换结果)}"""
+    keyword = str(keyword).strip()
+    if not keyword:
+        return {}
+    mapping, _ = load_mapping(terms_paths)
+    post_fix = load_post_fix(post_fix_path)
+    res = {
+        "keyword": keyword,
+        "in_terms": keyword in mapping,
+        "terms_result": mapping.get(keyword, ""),
+        "in_post_fix": keyword in post_fix,
+        "postfix_result": post_fix.get(keyword, ""),
+    }
+    # 实际管线结果（不含英文上下文）
+    res["converted"] = convert_text(keyword, "", mapping, post_fix)
+    return res
