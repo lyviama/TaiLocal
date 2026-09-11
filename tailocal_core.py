@@ -169,9 +169,13 @@ def convert_text(text, en, mapping, post_fix, log=None):
     return converted
 
 
-def convert_excel(input_file, terms_paths, post_fix_path, log_rows=None):
+def convert_excel(input_file, terms_paths, post_fix_path, log_rows=None, progress_cb=None):
     """转换Excel：自动检测中文列/英文列，输出(_tw.xlsx)到原目录"""
+    if progress_cb:
+        progress_cb("read")
     df = pd.read_excel(input_file)
+    if progress_cb:
+        progress_cb("convert", 0)
     zh_col = _find_col(df.columns, ZH_COL_CANDIDATES)
     if zh_col is None:
         zh_col = df.columns[0]
@@ -184,7 +188,16 @@ def convert_excel(input_file, terms_paths, post_fix_path, log_rows=None):
         en = row[en_col] if en_col else ""
         return convert_text(row[zh_col], en, mapping, post_fix, log_rows)
 
-    df["_zh-TW"] = df.apply(conv, axis=1)
+    total = max(len(df), 1)
+    step = max(total // 5, 1)
+    done = 0
+    results = []
+    for _, row in df.iterrows():
+        results.append(conv(row))
+        done += 1
+        if progress_cb and done % step == 0:
+            progress_cb("convert", int(done * 100 / total))
+    df["_zh-TW"] = results
     return df, loaded, len(mapping), len(post_fix)
 
 
