@@ -82,22 +82,14 @@ def run_convert(input_file, status_cb=None, progress_cb=None):
     df, loaded, n_terms, n_fix = convert_excel(input_file, TERMS, POST_FIX, log_rows, progress_cb=progress_cb)
 
     out_dir = os.path.dirname(os.path.abspath(input_file))
-    base_name = os.path.splitext(os.path.basename(input_file))[0]
     ts = datetime.now().strftime("%m%d_%H%M%S")
-    out_file = os.path.join(out_dir, f"{base_name}_tw_{ts}.xlsx")
+    out_file = os.path.join(out_dir, f"翻譯結果_{ts}.xlsx")
     try:
         df.to_excel(out_file, index=False)
     except PermissionError:
         raise PermissionError(f"⚠️ 輸出檔案 {os.path.basename(out_file)} 無法寫入——若它正在 Excel 中打開，請先關閉後重試！")
 
-    # log（debug用）
-    try:
-        log_file = os.path.join(out_dir, f"{base_name}_twlog_{ts}.xlsx")
-        pd.DataFrame(log_rows).to_excel(log_file, index=False)
-    except Exception:
-        pass
-
-    msg = "\n".join([f"✅ 术语表 {n}: {c} 条" for n, c in loaded]) + f"\n🎯 生效术语 {n_terms} 条 · post_fix {n_fix} 条"
+    msg = f"🎯 生效術語 {n_terms} 條 · post_fix {n_fix} 條"
     return out_file, len(df), msg
 
 
