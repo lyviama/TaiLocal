@@ -136,7 +136,7 @@ def run_gui():
     FONT_XS = (_fam, 9)
     root = tk.Tk()
     root.title(APP_NAME)
-    root.geometry("460x460")
+    root.geometry("460x500")
     root.resizable(False, False)
     root.configure(bg="#F7F3EE")
 
@@ -235,7 +235,7 @@ def run_gui():
             try:
                 out, n, msg = run_convert(path, None, progress_cb=_prog)
                 root.after(0, lambda: status.configure(
-                    text=f"✅ 翻譯完成！共 {n} 條\n{msg}\n已輸出至：{out}", fg="#2C6E49"))
+                    text=f"✅ 翻譯完成！共 {n} 條｜{msg}\n📄 {os.path.basename(out)}", fg="#2C6E49"))
             except PermissionError as e:
                 msg = str(e) if str(e) else "檔案被佔用"
                 root.after(0, lambda: status.configure(text=f"⚠️ {msg}", fg="#B7950B"))
