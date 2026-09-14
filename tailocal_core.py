@@ -216,6 +216,25 @@ def search_terms(keyword, terms_paths, post_fix_path):
         "in_post_fix": keyword in post_fix,
         "postfix_result": post_fix.get(keyword, ""),
     }
+    # 简繁双向兜底：直接查不到时，用另一侧写法再查（简体key表用繁体词也能查到）
+    if not res["in_terms"] and not res["in_post_fix"]:
+        try:
+            from opencc import OpenCC
+            _cc_s2t = OpenCC("s2t")
+            _cc_t2s = OpenCC("t2s")
+            for alt in (_cc_s2t.convert(keyword), _cc_t2s.convert(keyword)):
+                if alt == keyword:
+                    continue
+                if alt in mapping and not res["in_terms"]:
+                    res["in_terms"] = True
+                    res["terms_result"] = mapping[alt]
+                    res["matched_alt"] = alt
+                if alt in post_fix and not res["in_post_fix"]:
+                    res["in_post_fix"] = True
+                    res["postfix_result"] = post_fix[alt]
+                    res["matched_alt"] = alt
+        except Exception:
+            pass
     # 实际管线结果（不含英文上下文）
     res["converted"] = convert_text(keyword, "", mapping, post_fix)
     return res
