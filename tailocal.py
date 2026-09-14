@@ -128,7 +128,7 @@ def run_gui():
     FONT_XS = (_fam, 9)
     root = tk.Tk()
     root.title(APP_NAME)
-    root.geometry("460x500")
+    root.geometry("470x600")
     root.resizable(False, False)
     root.configure(bg="#F7F3EE")
 
