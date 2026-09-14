@@ -83,7 +83,7 @@ def run_convert(input_file, status_cb=None, progress_cb=None):
 
     out_dir = os.path.dirname(os.path.abspath(input_file))
     ts = datetime.now().strftime("%m%d_%H%M%S")
-    out_file = os.path.join(out_dir, f"翻譯結果_{ts}.xlsx")
+    out_file = os.path.join(out_dir, f"已翻譯_{ts}.xlsx")
     try:
         df.to_excel(out_file, index=False)
     except PermissionError:
